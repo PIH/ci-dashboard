@@ -63,8 +63,14 @@
   .btn:hover { border-color: var(--running); }
   .btn:disabled { opacity: 0.5; cursor: default; }
   .btn-row { display: flex; gap: 6px; justify-content: flex-end; }
+  #grid-container { max-width: 1100px; margin: 0 auto; }
+  .group { margin-bottom: 28px; }
+  .group:last-child { margin-bottom: 0; }
+  .group-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--ink-muted); margin: 0 0 10px;
+  }
   .grid {
-    max-width: 1100px; margin: 0 auto;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px;
   }
   .card {
@@ -118,7 +124,7 @@
   </div>
 </header>
 
-<div class="grid" id="grid"></div>
+<div id="grid-container"></div>
 
 <footer>
   Status data is produced by a scheduled GitHub Actions workflow in this repo (runs roughly every 5 minutes,
@@ -136,7 +142,7 @@ const WAIT_POLL_SECONDS = 5;     // faster cadence right after "Trigger update"
 const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
 const SCHEDULE_MINUTES = 5;      // must match the cron in update-status.yml
 
-const grid = document.getElementById("grid");
+const gridContainer = document.getElementById("grid-container");
 const generatedAtEl = document.getElementById("generated-at");
 const countdownEl = document.getElementById("countdown");
 const checkNowBtn = document.getElementById("check-now");
@@ -286,14 +292,35 @@ async function loadStatus() {
     const data = await res.json();
 
     const nextByRepo = new Map();
-    grid.innerHTML = "";
+    const groups = new Map(); // group name -> array of rendered cards, in first-seen order
     (data.repos || []).forEach((entry) => {
       const sig = signature(entry);
       const changed = previousByRepo !== null && previousByRepo.get(entry.repo) !== sig;
       nextByRepo.set(entry.repo, sig);
-      grid.appendChild(renderCard(entry, changed));
+
+      const groupName = entry.group || "Other";
+      if (!groups.has(groupName)) groups.set(groupName, []);
+      groups.get(groupName).push(renderCard(entry, changed));
     });
     previousByRepo = nextByRepo;
+
+    gridContainer.innerHTML = "";
+    for (const [groupName, cards] of groups) {
+      const section = document.createElement("section");
+      section.className = "group";
+
+      const title = document.createElement("h2");
+      title.className = "group-title";
+      title.textContent = groupName;
+      section.appendChild(title);
+
+      const gridEl = document.createElement("div");
+      gridEl.className = "grid";
+      cards.forEach((card) => gridEl.appendChild(card));
+      section.appendChild(gridEl);
+
+      gridContainer.appendChild(section);
+    }
 
     const isNewData = lastGeneratedAt !== null && data.generated_at !== lastGeneratedAt;
     lastGeneratedAt = data.generated_at;

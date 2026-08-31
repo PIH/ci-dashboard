@@ -29,18 +29,28 @@ jobs:
           set -euo pipefail
 
           repos='[
-            {"repo":"openmrs-module-pihapps","workflow":"deploy.yml","label":"Deploy"},
-            {"repo":"openmrs-module-pihcore","workflow":"deploy.yml","label":"Deploy"},
-            {"repo":"pihemr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"repo":"ces-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"repo":"lesotho-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"repo":"pihliberia-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"repo":"pihsl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"repo":"zl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"}
+            {"group":"Modules","repo":"openmrs-module-pihapps","workflow":"deploy.yml","label":"Deploy"},
+            {"group":"Modules","repo":"openmrs-module-pihcore","workflow":"deploy.yml","label":"Deploy"},
+            {"group":"Modules","repo":"openmrs-frontend-pihemr","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+
+            {"group":"EMR Distributions","repo":"pihemr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"ces-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"lesotho-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"pihliberia-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"pihsl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"zl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+
+            {"group":"ETL Pipelines","repo":"apzu-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"ETL Pipelines","repo":"ces-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"ETL Pipelines","repo":"imb-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"ETL Pipelines","repo":"liberia-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"ETL Pipelines","repo":"sl-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"ETL Pipelines","repo":"zl-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"}
           ]'
 
           out='[]'
           while IFS= read -r row; do
+            group=$(echo "$row" | jq -r '.group')
             repo=$(echo "$row" | jq -r '.repo')
             workflow=$(echo "$row" | jq -r '.workflow')
             label=$(echo "$row" | jq -r '.label')
@@ -48,10 +58,12 @@ jobs:
             run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=1" --jq '.workflow_runs[0] // {}')
 
             entry=$(jq -n \
+              --arg group "$group" \
               --arg repo "$repo" \
               --arg label "$label" \
               --argjson run "$run" \
               '{
+                group: $group,
                 repo: $repo,
                 workflow_label: $label,
                 status: $run.status,
