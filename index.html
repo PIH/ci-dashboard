@@ -54,12 +54,15 @@
   #meta { text-align: right; }
   #meta .meta-line { color: var(--ink-muted); font-size: 12px; margin-bottom: 4px; }
   #meta .meta-line strong { color: var(--ink-2); font-weight: 600; }
-  #refresh {
+  #waiting-line { color: var(--running); display: none; align-items: center; justify-content: flex-end; gap: 6px; }
+  #waiting-line.visible { display: flex; }
+  .btn {
     font: inherit; font-size: 12px; color: var(--running); background: none; border: 1px solid var(--border);
-    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; text-decoration: none; display: inline-block;
   }
-  #refresh:hover { border-color: var(--running); }
-  #refresh:disabled { opacity: 0.5; cursor: default; }
+  .btn:hover { border-color: var(--running); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn-row { display: flex; gap: 6px; justify-content: flex-end; }
   .grid {
     max-width: 1100px; margin: 0 auto;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px;
@@ -86,6 +89,15 @@
   .card-time { color: var(--ink-2); font-size: 12px; margin-top: 8px; }
   .card-link { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--running); text-decoration: none; }
   .card-link:hover { text-decoration: underline; }
+  .card.card-updated { animation: card-flash 1.8s ease-out; }
+  @keyframes card-flash {
+    0%   { box-shadow: 0 0 0 2px var(--state-color, var(--running)); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .checking-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--running); flex: none; animation: pulse 0.9s ease-in-out infinite;
+  }
   footer { max-width: 1100px; margin: 24px auto 0; color: var(--ink-muted); font-size: 12px; }
 </style>
 </head>
@@ -96,9 +108,13 @@
     <p>Build status across PIH repositories.</p>
   </div>
   <div id="meta">
-    <div class="meta-line">Data generated <strong id="generated-at">…</strong></div>
-    <div class="meta-line">Next check in <strong id="countdown">…</strong></div>
-    <button id="refresh" type="button">Refresh now</button>
+    <div class="meta-line">Data as of <strong id="generated-at">…</strong></div>
+    <div class="meta-line">Next scheduled update in <strong id="countdown">…</strong></div>
+    <div class="meta-line" id="waiting-line"><span class="checking-dot"></span> <span id="waiting-text">Waiting for backend update…</span></div>
+    <div class="btn-row">
+      <button id="check-now" class="btn" type="button">Check now</button>
+      <a id="trigger" class="btn" href="https://github.com/PIH/ci-dashboard/actions/workflows/update-status.yml" target="_blank" rel="noopener">Trigger update →</a>
+    </div>
   </div>
 </header>
 
@@ -106,20 +122,33 @@
 
 <footer>
   Status data is produced by a scheduled GitHub Actions workflow in this repo (runs roughly every 5 minutes,
-  authenticated against the GitHub API) and published as a static file. This page just reads that file, so
-  viewing it doesn't consume any GitHub API quota, no matter how many people have it open.
+  authenticated against the GitHub API) and published as a static file, so viewing this page never consumes
+  any GitHub API quota. "Trigger update" opens the workflow's page on GitHub, where you can click
+  "Run workflow" if you have write access to this repo &mdash; the browser can't kick off a run itself without
+  embedding a credential in this public page, which we deliberately don't do. Once triggered there, this page
+  polls for the new data and updates automatically.
 </footer>
 
 <script>
 const STATUS_URL = "status.json";
-const POLL_SECONDS = 60;
+const QUIET_POLL_SECONDS = 60;   // cadence for the passive background refresh
+const WAIT_POLL_SECONDS = 5;     // faster cadence right after "Trigger update"
+const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
+const SCHEDULE_MINUTES = 5;      // must match the cron in update-status.yml
 
 const grid = document.getElementById("grid");
 const generatedAtEl = document.getElementById("generated-at");
 const countdownEl = document.getElementById("countdown");
-const refreshBtn = document.getElementById("refresh");
+const checkNowBtn = document.getElementById("check-now");
+const triggerLink = document.getElementById("trigger");
+const waitingLine = document.getElementById("waiting-line");
+const waitingText = document.getElementById("waiting-text");
 
-let secondsLeft = POLL_SECONDS;
+let previousByRepo = null;   // null until first successful load, so nothing flashes on page load
+let lastGeneratedAt = null;  // the generated_at we last rendered, used to detect real changes
+let waiting = false;
+let waitDeadline = 0;
+let pollTimer = null;
 
 function relativeTime(iso) {
   if (!iso) return "unknown";
@@ -154,9 +183,9 @@ function stateFor(entry) {
   return { key: "critical", label: "Failing", color: "var(--critical)" };
 }
 
-function renderCard(entry) {
+function renderCard(entry, changed) {
   const card = document.createElement("div");
-  card.className = "card";
+  card.className = "card" + (changed ? " card-updated" : "");
 
   const state = stateFor(entry);
   card.style.setProperty("--state-color", state.color);
@@ -212,33 +241,90 @@ function formatCountdown(secs) {
   return m + ":" + String(s).padStart(2, "0");
 }
 
+function signature(entry) {
+  return `${entry.status}|${entry.conclusion}|${entry.run_number}|${entry.updated_at}`;
+}
+
+// The cron schedule fires on 5-minute UTC wall-clock boundaries; GitHub can queue it a bit
+// late under load, so this is an estimate of the next attempt, not a guarantee.
+function nextScheduledBoundary() {
+  const next = new Date();
+  next.setUTCSeconds(0, 0);
+  const mins = next.getUTCMinutes();
+  const rem = mins % SCHEDULE_MINUTES;
+  next.setUTCMinutes(mins + (SCHEDULE_MINUTES - rem));
+  if (next.getTime() <= Date.now()) next.setUTCMinutes(next.getUTCMinutes() + SCHEDULE_MINUTES);
+  return next;
+}
+
+function tickCountdown() {
+  const secs = Math.max(0, Math.round((nextScheduledBoundary() - Date.now()) / 1000));
+  countdownEl.textContent = formatCountdown(secs);
+}
+
+function stopWaiting(succeeded) {
+  waiting = false;
+  if (succeeded) {
+    waitingLine.classList.remove("visible");
+  } else {
+    waitingText.textContent = "No new data yet — check the Actions tab.";
+    setTimeout(() => waitingLine.classList.remove("visible"), 8000);
+  }
+}
+
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  const seconds = waiting ? WAIT_POLL_SECONDS : QUIET_POLL_SECONDS;
+  pollTimer = setTimeout(loadStatus, seconds * 1000);
+}
+
 async function loadStatus() {
-  refreshBtn.disabled = true;
+  checkNowBtn.disabled = true;
   try {
     const res = await fetch(`${STATUS_URL}?t=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) throw new Error(String(res.status));
     const data = await res.json();
 
+    const nextByRepo = new Map();
     grid.innerHTML = "";
-    (data.repos || []).forEach((entry) => grid.appendChild(renderCard(entry)));
+    (data.repos || []).forEach((entry) => {
+      const sig = signature(entry);
+      const changed = previousByRepo !== null && previousByRepo.get(entry.repo) !== sig;
+      nextByRepo.set(entry.repo, sig);
+      grid.appendChild(renderCard(entry, changed));
+    });
+    previousByRepo = nextByRepo;
 
+    const isNewData = lastGeneratedAt !== null && data.generated_at !== lastGeneratedAt;
+    lastGeneratedAt = data.generated_at;
     generatedAtEl.textContent = relativeTime(data.generated_at);
+
+    if (waiting) {
+      if (isNewData) stopWaiting(true);
+      else if (Date.now() > waitDeadline) stopWaiting(false);
+    }
   } catch (e) {
     generatedAtEl.textContent = "unavailable (" + e.message + ")";
   } finally {
-    secondsLeft = POLL_SECONDS;
-    refreshBtn.disabled = false;
+    checkNowBtn.disabled = false;
+    schedulePoll();
   }
 }
 
-refreshBtn.addEventListener("click", loadStatus);
+checkNowBtn.addEventListener("click", () => { clearTimeout(pollTimer); loadStatus(); });
+
+triggerLink.addEventListener("click", () => {
+  waiting = true;
+  waitDeadline = Date.now() + WAIT_TIMEOUT_MS;
+  waitingText.textContent = "Waiting for backend update…";
+  waitingLine.classList.add("visible");
+  clearTimeout(pollTimer);
+  loadStatus();
+});
 
 loadStatus();
-setInterval(() => {
-  secondsLeft = Math.max(0, secondsLeft - 1);
-  countdownEl.textContent = formatCountdown(secondsLeft);
-  if (secondsLeft === 0) loadStatus();
-}, 1000);
+tickCountdown();
+setInterval(tickCountdown, 1000);
 </script>
 </body>
 </html>
