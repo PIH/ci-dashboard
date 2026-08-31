@@ -1,1 +1,3 @@
-*.iml
+status.json
+_site/
+.iml

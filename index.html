@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIH CI Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;
+    --surface:   #fcfcfb;
+    --border:    #e4e3de;
+    --ink:       #0b0b0b;
+    --ink-2:     #52514e;
+    --ink-muted: #898781;
+    --good:      #0ca30c;
+    --critical:  #d03b3b;
+    --running:   #2a78d6;
+    --neutral:   #898781;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:      #0d0d0d;
+      --surface:   #1a1a19;
+      --border:    #333230;
+      --ink:       #ffffff;
+      --ink-2:     #c3c2b7;
+      --ink-muted: #898781;
+      --running:   #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:      #0d0d0d;
+    --surface:   #1a1a19;
+    --border:    #333230;
+    --ink:       #ffffff;
+    --ink-2:     #c3c2b7;
+    --ink-muted: #898781;
+    --running:   #3987e5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 32px 24px 64px;
+  }
+  header { max-width: 1100px; margin: 0 auto 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--ink-2); font-size: 13px; }
+  #meta { text-align: right; }
+  #meta .meta-line { color: var(--ink-muted); font-size: 12px; margin-bottom: 4px; }
+  #meta .meta-line strong { color: var(--ink-2); font-weight: 600; }
+  #refresh {
+    font: inherit; font-size: 12px; color: var(--running); background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  }
+  #refresh:hover { border-color: var(--running); }
+  #refresh:disabled { opacity: 0.5; cursor: default; }
+  .grid {
+    max-width: 1100px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--state-color, var(--neutral));
+  }
+  .card-repo { font-weight: 600; font-size: 14px; }
+  .card-repo a { color: inherit; text-decoration: none; }
+  .card-repo a:hover { text-decoration: underline; }
+  .card-workflow { color: var(--ink-muted); font-size: 12px; margin-top: 2px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+    font-size: 12px; font-weight: 600; color: var(--state-color, var(--neutral));
+  }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--state-color, var(--neutral)); flex: none; }
+  .pill.running .dot { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .card-time { color: var(--ink-2); font-size: 12px; margin-top: 8px; }
+  .card-link { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--running); text-decoration: none; }
+  .card-link:hover { text-decoration: underline; }
+  footer { max-width: 1100px; margin: 24px auto 0; color: var(--ink-muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>PIH CI Dashboard</h1>
+    <p>Build status across PIH repositories.</p>
+  </div>
+  <div id="meta">
+    <div class="meta-line">Data generated <strong id="generated-at">…</strong></div>
+    <div class="meta-line">Next check in <strong id="countdown">…</strong></div>
+    <button id="refresh" type="button">Refresh now</button>
+  </div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  Status data is produced by a scheduled GitHub Actions workflow in this repo (runs roughly every 5 minutes,
+  authenticated against the GitHub API) and published as a static file. This page just reads that file, so
+  viewing it doesn't consume any GitHub API quota, no matter how many people have it open.
+</footer>
+
+<script>
+const STATUS_URL = "status.json";
+const POLL_SECONDS = 60;
+
+const grid = document.getElementById("grid");
+const generatedAtEl = document.getElementById("generated-at");
+const countdownEl = document.getElementById("countdown");
+const refreshBtn = document.getElementById("refresh");
+
+let secondsLeft = POLL_SECONDS;
+
+function relativeTime(iso) {
+  if (!iso) return "unknown";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + "h ago";
+  return Math.round(hrs / 24) + "d ago";
+}
+
+function duration(startIso, endIso) {
+  if (!startIso || !endIso) return null;
+  const secs = Math.round((new Date(endIso) - new Date(startIso)) / 1000);
+  if (secs < 60) return secs + "s";
+  const mins = Math.floor(secs / 60);
+  const remSecs = secs % 60;
+  return mins + "m " + remSecs + "s";
+}
+
+function stateFor(entry) {
+  if (!entry.status) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
+  if (entry.status !== "completed") {
+    const label = entry.status === "queued" ? "Queued" : "Running";
+    return { key: "running", label, color: "var(--running)" };
+  }
+  if (entry.conclusion === "success") return { key: "good", label: "Passing", color: "var(--good)" };
+  if (entry.conclusion === "cancelled" || entry.conclusion === "skipped") {
+    return { key: "neutral", label: entry.conclusion === "cancelled" ? "Cancelled" : "Skipped", color: "var(--neutral)" };
+  }
+  return { key: "critical", label: "Failing", color: "var(--critical)" };
+}
+
+function renderCard(entry) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const state = stateFor(entry);
+  card.style.setProperty("--state-color", state.color);
+
+  const repoLine = document.createElement("div");
+  repoLine.className = "card-repo";
+  const repoLink = document.createElement("a");
+  repoLink.href = `https://github.com/PIH/${entry.repo}`;
+  repoLink.textContent = entry.repo;
+  repoLink.target = "_blank";
+  repoLink.rel = "noopener";
+  repoLine.appendChild(repoLink);
+  card.appendChild(repoLine);
+
+  const workflowLine = document.createElement("div");
+  workflowLine.className = "card-workflow";
+  workflowLine.textContent = entry.workflow_label;
+  card.appendChild(workflowLine);
+
+  const pill = document.createElement("div");
+  pill.className = "pill" + (state.key === "running" ? " running" : "");
+  pill.innerHTML = `<span class="dot"></span> ${state.label}`;
+  card.appendChild(pill);
+
+  if (entry.status) {
+    const timeLine = document.createElement("div");
+    timeLine.className = "card-time";
+    if (entry.status === "completed") {
+      const d = duration(entry.run_started_at, entry.updated_at);
+      timeLine.textContent = `${relativeTime(entry.updated_at)}${d ? " · took " + d : ""} · #${entry.run_number} on ${entry.head_branch}`;
+    } else {
+      timeLine.textContent = `started ${relativeTime(entry.run_started_at)} · #${entry.run_number} on ${entry.head_branch}`;
+    }
+    card.appendChild(timeLine);
+
+    if (entry.html_url) {
+      const link = document.createElement("a");
+      link.className = "card-link";
+      link.href = entry.html_url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "View run →";
+      card.appendChild(link);
+    }
+  }
+
+  return card;
+}
+
+function formatCountdown(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m + ":" + String(s).padStart(2, "0");
+}
+
+async function loadStatus() {
+  refreshBtn.disabled = true;
+  try {
+    const res = await fetch(`${STATUS_URL}?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+
+    grid.innerHTML = "";
+    (data.repos || []).forEach((entry) => grid.appendChild(renderCard(entry)));
+
+    generatedAtEl.textContent = relativeTime(data.generated_at);
+  } catch (e) {
+    generatedAtEl.textContent = "unavailable (" + e.message + ")";
+  } finally {
+    secondsLeft = POLL_SECONDS;
+    refreshBtn.disabled = false;
+  }
+}
+
+refreshBtn.addEventListener("click", loadStatus);
+
+loadStatus();
+setInterval(() => {
+  secondsLeft = Math.max(0, secondsLeft - 1);
+  countdownEl.textContent = formatCountdown(secondsLeft);
+  if (secondsLeft === 0) loadStatus();
+}, 1000);
+</script>
+</body>
+</html>
