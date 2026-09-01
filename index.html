@@ -92,9 +92,16 @@
   .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--state-color, var(--neutral)); flex: none; }
   .pill.running .dot { animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .card-time { color: var(--ink-2); font-size: 12px; margin-top: 8px; }
-  .card-link { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--running); text-decoration: none; }
-  .card-link:hover { text-decoration: underline; }
+  .job-list { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .job-row {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2);
+    text-decoration: none; padding: 2px 0;
+  }
+  .job-row .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--state-color, var(--neutral)); flex: none; }
+  .job-row.running .dot { animation: pulse 1.2s ease-in-out infinite; }
+  .job-row .job-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .job-row .job-status { color: var(--state-color, var(--neutral)); font-weight: 600; flex: none; }
+  a.job-row:hover { text-decoration: underline; }
   .card.card-updated { animation: card-flash 1.8s ease-out; }
   @keyframes card-flash {
     0%   { box-shadow: 0 0 0 2px var(--state-color, var(--running)); }
@@ -175,26 +182,29 @@ function relativeTime(iso) {
   return Math.round(hrs / 24) + "d ago";
 }
 
-function duration(startIso, endIso) {
-  if (!startIso || !endIso) return null;
-  const secs = Math.round((new Date(endIso) - new Date(startIso)) / 1000);
-  if (secs < 60) return secs + "s";
-  const mins = Math.floor(secs / 60);
-  const remSecs = secs % 60;
-  return mins + "m " + remSecs + "s";
-}
-
-function stateFor(entry) {
-  if (!entry.status) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
-  if (entry.status !== "completed") {
-    const label = entry.status === "queued" ? "Queued" : "Running";
+function jobState(job) {
+  if (!job.status) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
+  if (job.status !== "completed") {
+    const label = job.status === "queued" ? "Queued" : "Running";
     return { key: "running", label, color: "var(--running)" };
   }
-  if (entry.conclusion === "success") return { key: "good", label: "Passing", color: "var(--good)" };
-  if (entry.conclusion === "cancelled" || entry.conclusion === "skipped") {
-    return { key: "neutral", label: entry.conclusion === "cancelled" ? "Cancelled" : "Skipped", color: "var(--neutral)" };
+  if (job.conclusion === "success") return { key: "good", label: "Passing", color: "var(--good)" };
+  if (job.conclusion === "cancelled" || job.conclusion === "skipped") {
+    return { key: "neutral", label: job.conclusion === "cancelled" ? "Cancelled" : "Skipped", color: "var(--neutral)" };
   }
   return { key: "critical", label: "Failing", color: "var(--critical)" };
+}
+
+const STATE_PRIORITY = { critical: 3, running: 2, good: 1, unknown: 0, neutral: 0 };
+
+function worstJobState(jobs) {
+  if (!jobs || jobs.length === 0) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
+  let worst = null;
+  for (const job of jobs) {
+    const s = jobState(job);
+    if (!worst || STATE_PRIORITY[s.key] > STATE_PRIORITY[worst.key]) worst = s;
+  }
+  return worst;
 }
 
 function renderCard(entry, changed, justTriggered) {
@@ -203,8 +213,8 @@ function renderCard(entry, changed, justTriggered) {
     + (changed ? " card-updated" : "")
     + (justTriggered ? " card-triggered" : "");
 
-  const state = stateFor(entry);
-  card.style.setProperty("--state-color", state.color);
+  const worst = worstJobState(entry.jobs);
+  card.style.setProperty("--state-color", worst.color);
 
   const repoLine = document.createElement("div");
   repoLine.className = "card-repo";
@@ -218,41 +228,55 @@ function renderCard(entry, changed, justTriggered) {
 
   const workflowLine = document.createElement("div");
   workflowLine.className = "card-workflow";
-  workflowLine.textContent = entry.workflow_label;
+  workflowLine.textContent = entry.workflow_label + (entry.run_number ? ` #${entry.run_number}` : "");
   card.appendChild(workflowLine);
 
-  const pill = document.createElement("div");
-  pill.className = "pill" + (state.key === "running" ? " running" : "");
-  pill.innerHTML = `<span class="dot"></span> ${state.label}`;
-  card.appendChild(pill);
-
-  if (entry.status) {
-    const timeLine = document.createElement("div");
-    timeLine.className = "card-time";
-    if (entry.status === "completed") {
-      const d = duration(entry.run_started_at, entry.updated_at);
-      timeLine.textContent = `${relativeTime(entry.updated_at)}${d ? " · took " + d : ""} · #${entry.run_number} on ${entry.head_branch}`;
-    } else {
-      timeLine.textContent = `started ${relativeTime(entry.run_started_at)} · #${entry.run_number} on ${entry.head_branch}`;
-    }
-    card.appendChild(timeLine);
-
-    if (entry.html_url) {
-      const link = document.createElement("a");
-      link.className = "card-link";
-      link.href = entry.html_url;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.textContent = "View run →";
-      card.appendChild(link);
-    }
+  if (!entry.jobs || entry.jobs.length === 0) {
+    const pill = document.createElement("div");
+    pill.className = "pill";
+    pill.style.setProperty("--state-color", "var(--neutral)");
+    pill.innerHTML = `<span class="dot"></span> No runs yet`;
+    card.appendChild(pill);
+    return card;
   }
+
+  const jobList = document.createElement("div");
+  jobList.className = "job-list";
+
+  entry.jobs.forEach((job) => {
+    const state = jobState(job);
+    const row = document.createElement(job.html_url ? "a" : "div");
+    row.className = "job-row" + (state.key === "running" ? " running" : "");
+    row.style.setProperty("--state-color", state.color);
+    if (job.html_url) {
+      row.href = job.html_url;
+      row.target = "_blank";
+      row.rel = "noopener";
+    }
+
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    row.appendChild(dot);
+
+    const name = document.createElement("span");
+    name.className = "job-name";
+    name.textContent = job.name;
+    row.appendChild(name);
+
+    const label = document.createElement("span");
+    label.className = "job-status";
+    label.textContent = state.label;
+    row.appendChild(label);
+
+    jobList.appendChild(row);
+  });
+  card.appendChild(jobList);
 
   return card;
 }
 
 function signature(entry) {
-  return `${entry.status}|${entry.conclusion}|${entry.run_number}|${entry.updated_at}`;
+  return JSON.stringify((entry.jobs || []).map((j) => [j.name, j.status, j.conclusion, j.completed_at]));
 }
 
 function stopWaiting(succeeded) {
