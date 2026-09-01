@@ -100,6 +100,15 @@
     0%   { box-shadow: 0 0 0 2px var(--state-color, var(--running)); }
     100% { box-shadow: 0 0 0 0 transparent; }
   }
+  .card.card-triggered { animation: card-triggered-pulse 8s ease-out; }
+  @keyframes card-triggered-pulse {
+    0%   { outline: 3px solid var(--running); outline-offset: 2px; }
+    15%  { outline: 3px solid var(--running); outline-offset: 2px; }
+    100% { outline: 3px solid transparent; outline-offset: 2px; }
+  }
+  .card.card-updated.card-triggered {
+    animation: card-flash 1.8s ease-out, card-triggered-pulse 8s ease-out;
+  }
   .checking-dot {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%;
     background: var(--running); flex: none; animation: pulse 0.9s ease-in-out infinite;
@@ -115,7 +124,6 @@
   </div>
   <div id="meta">
     <div class="meta-line">Data as of <strong id="generated-at">…</strong></div>
-    <div class="meta-line">Next scheduled update in <strong id="countdown">…</strong></div>
     <div class="meta-line" id="waiting-line"><span class="checking-dot"></span> <span id="waiting-text">Waiting for backend update…</span></div>
     <div class="btn-row">
       <button id="check-now" class="btn" type="button">Check now</button>
@@ -127,12 +135,14 @@
 <div id="grid-container"></div>
 
 <footer>
-  Status data is produced by a scheduled GitHub Actions workflow in this repo (runs roughly every 5 minutes,
-  authenticated against the GitHub API) and published as a static file, so viewing this page never consumes
-  any GitHub API quota. "Trigger update" opens the workflow's page on GitHub, where you can click
-  "Run workflow" if you have write access to this repo &mdash; the browser can't kick off a run itself without
-  embedding a credential in this public page, which we deliberately don't do. Once triggered there, this page
-  polls for the new data and updates automatically.
+  Status data refreshes automatically the moment a tracked build starts or finishes, via a
+  notification the build workflow sends directly to this repo, and on every push to
+  <code>main</code>. There is currently no periodic background re-check &mdash; if a repo
+  hasn't built recently, its card simply reflects the last known state, which is expected.
+  Viewing this page never consumes any GitHub API quota, since it only reads a static
+  published file. "Trigger update" opens the workflow's page on GitHub, where you can click
+  "Run workflow" if you have write access to this repo (the browser can't kick off a run
+  itself without embedding a credential in this public page, which we deliberately don't do).
 </footer>
 
 <script>
@@ -140,11 +150,9 @@ const STATUS_URL = "status.json";
 const QUIET_POLL_SECONDS = 60;   // cadence for the passive background refresh
 const WAIT_POLL_SECONDS = 5;     // faster cadence right after "Trigger update"
 const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
-const SCHEDULE_MINUTES = 5;      // must match the cron in update-status.yml
 
 const gridContainer = document.getElementById("grid-container");
 const generatedAtEl = document.getElementById("generated-at");
-const countdownEl = document.getElementById("countdown");
 const checkNowBtn = document.getElementById("check-now");
 const triggerLink = document.getElementById("trigger");
 const waitingLine = document.getElementById("waiting-line");
@@ -189,9 +197,11 @@ function stateFor(entry) {
   return { key: "critical", label: "Failing", color: "var(--critical)" };
 }
 
-function renderCard(entry, changed) {
+function renderCard(entry, changed, justTriggered) {
   const card = document.createElement("div");
-  card.className = "card" + (changed ? " card-updated" : "");
+  card.className = "card"
+    + (changed ? " card-updated" : "")
+    + (justTriggered ? " card-triggered" : "");
 
   const state = stateFor(entry);
   card.style.setProperty("--state-color", state.color);
@@ -241,31 +251,8 @@ function renderCard(entry, changed) {
   return card;
 }
 
-function formatCountdown(secs) {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return m + ":" + String(s).padStart(2, "0");
-}
-
 function signature(entry) {
   return `${entry.status}|${entry.conclusion}|${entry.run_number}|${entry.updated_at}`;
-}
-
-// The cron schedule fires on 5-minute UTC wall-clock boundaries; GitHub can queue it a bit
-// late under load, so this is an estimate of the next attempt, not a guarantee.
-function nextScheduledBoundary() {
-  const next = new Date();
-  next.setUTCSeconds(0, 0);
-  const mins = next.getUTCMinutes();
-  const rem = mins % SCHEDULE_MINUTES;
-  next.setUTCMinutes(mins + (SCHEDULE_MINUTES - rem));
-  if (next.getTime() <= Date.now()) next.setUTCMinutes(next.getUTCMinutes() + SCHEDULE_MINUTES);
-  return next;
-}
-
-function tickCountdown() {
-  const secs = Math.max(0, Math.round((nextScheduledBoundary() - Date.now()) / 1000));
-  countdownEl.textContent = formatCountdown(secs);
 }
 
 function stopWaiting(succeeded) {
@@ -291,16 +278,20 @@ async function loadStatus() {
     if (!res.ok) throw new Error(String(res.status));
     const data = await res.json();
 
+    const isNewData = lastGeneratedAt !== null && data.generated_at !== lastGeneratedAt;
+    lastGeneratedAt = data.generated_at;
+
     const nextByRepo = new Map();
     const groups = new Map(); // group name -> array of rendered cards, in first-seen order
     (data.repos || []).forEach((entry) => {
       const sig = signature(entry);
       const changed = previousByRepo !== null && previousByRepo.get(entry.repo) !== sig;
+      const justTriggered = isNewData && data.triggered_by === entry.repo;
       nextByRepo.set(entry.repo, sig);
 
       const groupName = entry.group || "Other";
       if (!groups.has(groupName)) groups.set(groupName, []);
-      groups.get(groupName).push(renderCard(entry, changed));
+      groups.get(groupName).push(renderCard(entry, changed, justTriggered));
     });
     previousByRepo = nextByRepo;
 
@@ -322,8 +313,6 @@ async function loadStatus() {
       gridContainer.appendChild(section);
     }
 
-    const isNewData = lastGeneratedAt !== null && data.generated_at !== lastGeneratedAt;
-    lastGeneratedAt = data.generated_at;
     generatedAtEl.textContent = relativeTime(data.generated_at);
 
     if (waiting) {
@@ -350,8 +339,6 @@ triggerLink.addEventListener("click", () => {
 });
 
 loadStatus();
-tickCountdown();
-setInterval(tickCountdown, 1000);
 </script>
 </body>
 </html>

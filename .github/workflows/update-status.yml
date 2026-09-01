@@ -3,9 +3,9 @@ name: Update status
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
+  repository_dispatch:
+    types: [build-status-changed]
 
 permissions:
   contents: read
@@ -25,6 +25,7 @@ jobs:
       - name: Fetch latest run for each repo
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGERED_BY_REPO: ${{ github.event.client_payload.repo }}
         run: |
           set -euo pipefail
 
@@ -39,6 +40,7 @@ jobs:
             {"group":"EMR Distributions","repo":"pihliberia-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"pihsl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"zl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"openmrs-module-pihmalawi","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
 
             {"group":"ETL Pipelines","repo":"apzu-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
             {"group":"ETL Pipelines","repo":"ces-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
@@ -78,8 +80,15 @@ jobs:
             out=$(echo "$out" | jq --argjson e "$entry" '. + [$e]')
           done < <(echo "$repos" | jq -c '.[]')
 
-          jq -n --argjson repos "$out" --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            '{generated_at: $generated_at, repos: $repos}' > status.json
+          jq -n \
+            --argjson repos "$out" \
+            --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg triggered_by "${TRIGGERED_BY_REPO:-}" \
+            '{
+              generated_at: $generated_at,
+              triggered_by: (if $triggered_by == "" then null else $triggered_by end),
+              repos: $repos
+            }' > status.json
 
       - name: Assemble Pages site
         run: |
