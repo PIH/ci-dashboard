@@ -92,16 +92,18 @@
   .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--state-color, var(--neutral)); flex: none; }
   .pill.running .dot { animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .job-list { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .job-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
   .job-row {
-    display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2);
-    text-decoration: none; padding: 2px 0;
+    display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--ink-2);
+    text-decoration: none; padding: 3px 0;
   }
+  .job-row-main { display: flex; align-items: center; gap: 6px; }
   .job-row .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--state-color, var(--neutral)); flex: none; }
   .job-row.running .dot { animation: pulse 1.2s ease-in-out infinite; }
   .job-row .job-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .job-row .job-status { color: var(--state-color, var(--neutral)); font-weight: 600; flex: none; }
-  a.job-row:hover { text-decoration: underline; }
+  .job-timing { font-size: 11px; color: var(--ink-muted); padding-left: 13px; }
+  a.job-row:hover .job-name { text-decoration: underline; }
   .card.card-updated { animation: card-flash 1.8s ease-out; }
   @keyframes card-flash {
     0%   { box-shadow: 0 0 0 2px var(--state-color, var(--running)); }
@@ -182,6 +184,22 @@ function relativeTime(iso) {
   return Math.round(hrs / 24) + "d ago";
 }
 
+function duration(startIso, endIso) {
+  const secs = Math.round((new Date(endIso) - new Date(startIso)) / 1000);
+  if (secs < 60) return secs + "s";
+  const mins = Math.floor(secs / 60);
+  const remSecs = secs % 60;
+  return mins + "m " + remSecs + "s";
+}
+
+function jobTimingText(job) {
+  if (!job.started_at) return null;
+  if (job.status === "completed" && job.completed_at) {
+    return `${relativeTime(job.completed_at)} · took ${duration(job.started_at, job.completed_at)}`;
+  }
+  return `started ${relativeTime(job.started_at)} · running ${duration(job.started_at, new Date().toISOString())}`;
+}
+
 function jobState(job) {
   if (!job.status) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
   if (job.status !== "completed") {
@@ -254,19 +272,32 @@ function renderCard(entry, changed, justTriggered) {
       row.rel = "noopener";
     }
 
+    const main = document.createElement("div");
+    main.className = "job-row-main";
+
     const dot = document.createElement("span");
     dot.className = "dot";
-    row.appendChild(dot);
+    main.appendChild(dot);
 
     const name = document.createElement("span");
     name.className = "job-name";
     name.textContent = job.name;
-    row.appendChild(name);
+    main.appendChild(name);
 
     const label = document.createElement("span");
     label.className = "job-status";
     label.textContent = state.label;
-    row.appendChild(label);
+    main.appendChild(label);
+
+    row.appendChild(main);
+
+    const timingText = jobTimingText(job);
+    if (timingText) {
+      const timing = document.createElement("div");
+      timing.className = "job-timing";
+      timing.textContent = timingText;
+      row.appendChild(timing);
+    }
 
     jobList.appendChild(row);
   });
