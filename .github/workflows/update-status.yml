@@ -62,7 +62,7 @@ jobs:
 
             if [ -n "$run_id" ]; then
               jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs" \
-                --jq '[.jobs[] | {name, status, conclusion, started_at, completed_at, html_url}]')
+                --jq '[.jobs[] | select(.name | endswith("notify-ci-dashboard") | not) | {name, status, conclusion, started_at, completed_at, html_url}]')
             else
               jobs='[]'
             fi
