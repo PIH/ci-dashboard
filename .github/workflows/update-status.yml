@@ -33,7 +33,7 @@ jobs:
             {"group":"Modules","repo":"openmrs-module-pihapps","workflow":"deploy.yml","label":"Deploy"},
             {"group":"Modules","repo":"openmrs-module-pihcore","workflow":"deploy.yml","label":"Deploy"},
             {"group":"Modules","repo":"openmrs-frontend-pihemr","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
-            {"group":"Modules","repo":"openhim-advapacs-mediator","workflow":"build-and-deploy.yml","label":"Build and deploy","only_jobs":["build-and-publish","deploy-to-kol-ci / deploy"]},
+            {"group":"Modules","repo":"openhim-advapacs-mediator","workflow":"build-and-deploy.yml","label":"Build and deploy"},
 
             {"group":"EMR Distributions","repo":"pihemr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"ces-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
@@ -57,26 +57,13 @@ jobs:
             repo=$(echo "$row" | jq -r '.repo')
             workflow=$(echo "$row" | jq -r '.workflow')
             label=$(echo "$row" | jq -r '.label')
-            only_jobs=$(echo "$row" | jq -c '.only_jobs // []')
 
             run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=1" --jq '.workflow_runs[0] // {}')
             run_id=$(echo "$run" | jq -r '.id // empty')
 
             if [ -n "$run_id" ]; then
-              # A job from a called reusable workflow is named "<caller-job-id> / <callee job name>"
-              # (e.g. "deploy-to-kol-ci / deploy") -- only_jobs entries must match that full name
-              # exactly, not just the caller-job-id half, so e.g. a reusable workflow's own
-              # internal notify-started job isn't accidentally included alongside it.
-              jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs" | jq -c --argjson only "$only_jobs" '
-                [.jobs[]
-                  | . as $job
-                  | select($job.name | endswith("notify-ci-dashboard") | not)
-                  | select(
-                      ($only | length) == 0
-                      or ($only | index($job.name) != null)
-                    )
-                  | {name: $job.name, status: $job.status, conclusion: $job.conclusion, started_at: $job.started_at, completed_at: $job.completed_at, html_url: $job.html_url}
-                ]')
+              jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs" \
+                --jq '[.jobs[] | select(.name | endswith("notify-ci-dashboard") | not) | {name, status, conclusion, started_at, completed_at, html_url}]')
             else
               jobs='[]'
             fi
