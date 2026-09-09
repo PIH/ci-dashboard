@@ -33,6 +33,7 @@ jobs:
             {"group":"Modules","repo":"openmrs-module-pihapps","workflow":"deploy.yml","label":"Deploy"},
             {"group":"Modules","repo":"openmrs-module-pihcore","workflow":"deploy.yml","label":"Deploy"},
             {"group":"Modules","repo":"openmrs-frontend-pihemr","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
+            {"group":"Modules","repo":"openhim-advapacs-mediator","workflow":"build-and-deploy.yml","label":"Build and deploy"},
 
             {"group":"EMR Distributions","repo":"pihemr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"ces-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
