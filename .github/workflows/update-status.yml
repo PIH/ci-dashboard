@@ -41,7 +41,7 @@ jobs:
             {"group":"EMR Distributions","repo":"pihliberia-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"pihsl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
             {"group":"EMR Distributions","repo":"zl-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
-            {"group":"EMR Distributions","repo":"openmrs-module-pihmalawi","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
+            {"group":"EMR Distributions","repo":"pihmalawi-emr","workflow":"build-and-deploy-to-openmrs-jfrog.yml","label":"Build and deploy"},
 
             {"group":"ETL Pipelines","repo":"apzu-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
             {"group":"ETL Pipelines","repo":"ces-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"},
