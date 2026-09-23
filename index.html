@@ -16,6 +16,7 @@
     --good:      #0ca30c;
     --critical:  #d03b3b;
     --running:   #2a78d6;
+    --disabled:  #c08200;
     --neutral:   #898781;
   }
   @media (prefers-color-scheme: dark) {
@@ -206,6 +207,7 @@ function jobState(job) {
     const label = job.status === "queued" ? "Queued" : "Running";
     return { key: "running", label, color: "var(--running)" };
   }
+  if (job.conclusion === "success" && job.disabled) return { key: "disabled", label: "Disabled", color: "var(--disabled)" };
   if (job.conclusion === "success") return { key: "good", label: "Passing", color: "var(--good)" };
   if (job.conclusion === "cancelled" || job.conclusion === "skipped") {
     return { key: "neutral", label: job.conclusion === "cancelled" ? "Cancelled" : "Skipped", color: "var(--neutral)" };
@@ -213,7 +215,7 @@ function jobState(job) {
   return { key: "critical", label: "Failing", color: "var(--critical)" };
 }
 
-const STATE_PRIORITY = { critical: 3, running: 2, good: 1, unknown: 0, neutral: 0 };
+const STATE_PRIORITY = { critical: 4, running: 3, disabled: 2, good: 1, unknown: 0, neutral: 0 };
 
 function worstJobState(jobs) {
   if (!jobs || jobs.length === 0) return { key: "unknown", label: "No runs yet", color: "var(--neutral)" };
@@ -307,7 +309,7 @@ function renderCard(entry, changed, justTriggered) {
 }
 
 function signature(entry) {
-  return JSON.stringify((entry.jobs || []).map((j) => [j.name, j.status, j.conclusion, j.completed_at]));
+  return JSON.stringify((entry.jobs || []).map((j) => [j.name, j.status, j.conclusion, j.disabled, j.completed_at]));
 }
 
 function stopWaiting(succeeded) {
