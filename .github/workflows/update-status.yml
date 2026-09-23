@@ -61,9 +61,11 @@ jobs:
             run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=1" --jq '.workflow_runs[0] // {}')
             run_id=$(echo "$run" | jq -r '.id // empty')
 
+            # disabled: a deploy-via-runner job that succeeded without running
+            # "Puppet apply", i.e. /etc/puppet/build-disabled was present on the host
             if [ -n "$run_id" ]; then
               jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs" \
-                --jq '[.jobs[] | select(.name | endswith("notify-ci-dashboard") or endswith("notify-started") | not) | {name, status, conclusion, started_at, completed_at, html_url}]')
+                --jq '[.jobs[] | select(.name | endswith("notify-ci-dashboard") or endswith("notify-started") | not) | {name, status, conclusion, started_at, completed_at, html_url, disabled: (.conclusion == "success" and any(.steps[]?; .name == "Puppet apply" and .conclusion == "skipped"))}]')
             else
               jobs='[]'
             fi
