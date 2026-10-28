@@ -12,13 +12,13 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    # superseded builds are dropped; only the latest status matters
+    concurrency:
+      group: pages-build
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
 
@@ -111,6 +111,14 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # never cancel a deploy mid-flight: that can wedge the Pages deployment for
+    # this SHA so later deploys report success without publishing. A newer
+    # pending deploy still replaces an older pending one, and the timeout keeps
+    # a hung deploy from blocking updates
+    timeout-minutes: 15
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
