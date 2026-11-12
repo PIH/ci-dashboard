@@ -42,7 +42,9 @@ def completed($rec):
   | (.state.stuck[$id] != null) as $was_stuck
   | .state.stuck |= del(.[$id])
   | .state.jobs[$rec.key] as $known
-  | if $result == null or ($known != null and $rec.job_id < $known.job_id) then .
+  | if $result == null or ($known != null and $rec.job_id < $known.job_id) then
+      # its result doesn't count (e.g. cancelled), but a stuck job ending still has to be reported
+      if $was_stuck then .events += [event("unstuck"; $rec; $rec.conclusion)] else . end
     else
       ($known.result // null) as $before
       | .state.jobs[$rec.key] = {result: $result, job_id: $rec.job_id}

@@ -21,10 +21,20 @@ def line: icon_and_label as [$icon, $label]
 
 def text_block: {type: "TextBlock", text: ., wrap: true};
 
+def is_good: .type == "recovered" or (.type == "unstuck" and .detail == "passed");
+
+def plural($n; $word): "\($n) \($word)\(if $n == 1 then "" else "s" end)";
+
+# The title counts what this post reports, e.g. "CI: 3 problems, 1 recovered". It never says "all clear": other jobs
+# reported earlier may still be failing.
 $ev[0] as $events
 | ($events | map(select(is_problem)) | length) as $problems
-| (if $problems == 0 then "CI: all clear"
-   else "CI: \($problems) problem\(if $problems == 1 then "" else "s" end)" end) as $title
+| ($events | map(select(is_good)) | length) as $good
+| (($events | length) - $problems - $good) as $other
+| ([ (if $problems > 0 then plural($problems; "problem") else empty end),
+     (if $good > 0 then "\($good) recovered" else empty end),
+     (if $other > 0 then plural($other; "update") else empty end) ]
+   | "CI: " + join(", ")) as $title
 | {
     type: "message",
     attachments: [{

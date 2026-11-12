@@ -86,7 +86,10 @@ jobs:
             workflow=$(echo "$row" | jq -r '.workflow')
             label=$(echo "$row" | jq -r '.label')
 
-            run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=1" --jq '.workflow_runs[0] // {}')
+            # the last few runs: the latest is what the dashboard shows; the latest completed (not cancelled) one is
+            # also read for alerting when the latest is still going, without a second runs request
+            recent_runs=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=5" --jq '.workflow_runs')
+            run=$(jq -c '.[0] // {}' <<< "$recent_runs")
             run_id=$(echo "$run" | jq -r '.id // empty')
 
             if [ -n "$run_id" ]; then
@@ -94,12 +97,12 @@ jobs:
               jobs=$(jq -c "[$job_filter | {name, status, conclusion, started_at, completed_at, html_url, disabled}]" <<< "$raw_jobs")
 
               # a failure in the latest completed run must still alert when a newer run has already started, so
-              # alerting also looks at that run (older run first)
+              # alerting also looks at that run (older run first). Best effort: if this extra fetch fails, the
+              # dashboard still publishes
               if [ "$(echo "$run" | jq -r '.status')" != "completed" ]; then
-                done_run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?status=completed&per_page=1" --jq '.workflow_runs[0] // {}')
+                done_run=$(jq -c 'map(select(.status == "completed" and .conclusion != "cancelled"))[0] // {}' <<< "$recent_runs")
                 done_run_id=$(echo "$done_run" | jq -r '.id // empty')
-                if [ -n "$done_run_id" ]; then
-                  done_jobs=$(gh api "repos/PIH/${repo}/actions/runs/${done_run_id}/jobs")
+                if [ -n "$done_run_id" ] && done_jobs=$(gh api "repos/PIH/${repo}/actions/runs/${done_run_id}/jobs"); then
                   snapshot=$(jq -c --argjson more "$(snapshot_of "$repo" "$done_run" "$done_jobs")" '. + $more' <<< "$snapshot")
                 fi
               fi

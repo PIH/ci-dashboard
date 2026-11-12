@@ -12,7 +12,7 @@
             "type": "TextBlock",
             "size": "Medium",
             "weight": "Bolder",
-            "text": "CI: all clear",
+            "text": "CI: 2 recovered",
             "wrap": true
           },
           {

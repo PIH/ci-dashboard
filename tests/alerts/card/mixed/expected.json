@@ -12,7 +12,7 @@
             "type": "TextBlock",
             "size": "Medium",
             "weight": "Bolder",
-            "text": "CI: 3 problems",
+            "text": "CI: 3 problems, 1 recovered",
             "wrap": true
           },
           {
