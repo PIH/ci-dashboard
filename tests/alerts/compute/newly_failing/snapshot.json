@@ -1,0 +1,15 @@
+[
+  {
+    "key": "zl-emr|master|build",
+    "repo": "zl-emr",
+    "branch": "master",
+    "job_name": "build",
+    "job_id": 200,
+    "status": "completed",
+    "conclusion": "failure",
+    "disabled": false,
+    "created_at": "2025-11-11T22:00:00Z",
+    "started_at": "2025-11-11T22:00:05Z",
+    "html_url": "https://github.com/PIH/zl-emr/actions/runs/1/job/200"
+  }
+]

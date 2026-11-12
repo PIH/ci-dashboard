@@ -1,0 +1,17 @@
+{
+  "state": {
+    "version": 1,
+    "jobs": {
+      "zl-emr|master|build": {
+        "result": "failure",
+        "job_id": 100
+      },
+      "pihsl-emr|master|build": {
+        "result": "success",
+        "job_id": 101
+      }
+    },
+    "stuck": {}
+  },
+  "events": []
+}

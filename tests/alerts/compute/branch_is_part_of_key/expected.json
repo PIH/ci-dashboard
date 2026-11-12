@@ -1,0 +1,17 @@
+{
+  "state": {
+    "version": 1,
+    "jobs": {
+      "pihmalawi-emr|9.1.x|build": {
+        "result": "failure",
+        "job_id": 100
+      },
+      "pihmalawi-emr|master|build": {
+        "result": "success",
+        "job_id": 200
+      }
+    },
+    "stuck": {}
+  },
+  "events": []
+}
