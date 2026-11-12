@@ -42,3 +42,6 @@ it. If a post fails, the old state is kept, so the same alert is retried on the 
 
 GitHub can delay scheduled runs when it is busy, and pauses them in a repo with no activity for 60 days. If the
 15-minute checks stop, re-enable the workflow on the Actions tab.
+
+**Removing alerts entirely:** everything was added in one PR, [#10](https://github.com/PIH/ci-dashboard/pull/10).
+Its description has step-by-step instructions to back it out and return the dashboard to how it was before.
