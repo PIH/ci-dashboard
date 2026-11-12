@@ -1,0 +1,22 @@
+{
+  "state": {
+    "version": 1,
+    "jobs": {
+      "zl-emr|master|build": {
+        "result": "success",
+        "job_id": 500
+      }
+    },
+    "stuck": {}
+  },
+  "events": [
+    {
+      "type": "unstuck",
+      "repo": "zl-emr",
+      "branch": "master",
+      "job_name": "build",
+      "html_url": "https://github.com/PIH/zl-emr/actions/runs/1/job/500",
+      "detail": "passed"
+    }
+  ]
+}
