@@ -22,11 +22,15 @@ Cancelled and skipped jobs, and jobs shown as Disabled, never alert. Besides bui
 minutes so stuck jobs are noticed even when no builds are running (e.g. a CI server is down).
 
 **Where they go:** the webhook URL of a Teams Workflow ("Post to a channel when a webhook request is received") on
-the channel, stored as the repo secret `TEAMS_WEBHOOK_URL`. The Teams Workflow belongs to the person who created
-it, so it stops working if their account does. To point alerts somewhere else, create a new Workflow and replace
-the secret: `gh secret set TEAMS_WEBHOOK_URL -R PIH/ci-dashboard`.
+the channel, stored as the PIH organization secret `PIHEMR_CHANNEL_TEAMS_WEBHOOK_URL` (the workflow passes it to
+`alerts/post.sh` as `TEAMS_WEBHOOK_URL`). The Teams Workflow belongs to the person who created it, so it stops
+working if their account does. To point alerts somewhere else, create a new Workflow and have a PIH org admin update
+that secret.
 
-**Turning alerts off:** delete the secret. The dashboard keeps updating, and alerts simply aren't sent.
+**Turning alerts off:** the secret is shared at the organization level, so don't delete it. Instead remove
+ci-dashboard from the secret's repository access (org Settings → Secrets and variables → Actions), or change the
+`TEAMS_WEBHOOK_URL:` line in `.github/workflows/update-status.yml` to an empty value. The dashboard keeps updating,
+and alerts simply aren't sent.
 
 **Changing the thresholds:** `ALERT_QUEUED_LIMIT_SECONDS` and `ALERT_RUNNING_LIMIT_SECONDS` in
 `.github/workflows/update-status.yml`.
