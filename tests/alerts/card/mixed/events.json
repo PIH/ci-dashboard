@@ -1,0 +1,34 @@
+[
+  {
+    "type": "recovered",
+    "repo": "pihsl-emr",
+    "branch": "master",
+    "job_name": "build",
+    "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/1/job/11",
+    "detail": "success"
+  },
+  {
+    "type": "failing",
+    "repo": "zl-emr",
+    "branch": "master",
+    "job_name": "smoke-tests / zl-ci / smoke-test",
+    "html_url": "https://github.com/PIH/zl-emr/actions/runs/1/job/12",
+    "detail": "failure"
+  },
+  {
+    "type": "stuck",
+    "repo": "ces-emr",
+    "branch": "master",
+    "job_name": "build",
+    "html_url": "https://github.com/PIH/ces-emr/actions/runs/1/job/13",
+    "detail": "queued 12 min"
+  },
+  {
+    "type": "unstuck",
+    "repo": "pihliberia-emr",
+    "branch": "master",
+    "job_name": "deploy",
+    "html_url": "https://github.com/PIH/pihliberia-emr/actions/runs/1/job/14",
+    "detail": "failed"
+  }
+]

@@ -4,18 +4,33 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the Teams alert instead of posting it, and publish nothing"
+        type: boolean
+        default: false
   repository_dispatch:
     types: [build-status-changed]
+  # catches stuck jobs even when no builds are starting or finishing (e.g. a CI server is down)
+  schedule:
+    - cron: '*/15 * * * *'
 
 permissions:
   contents: write
 
+env:
+  # Teams alerts: a job counts as stuck when queued or running longer than these (see README)
+  ALERT_QUEUED_LIMIT_SECONDS: 600
+  ALERT_RUNNING_LIMIT_SECONDS: 1800
+  DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    # superseded builds are dropped; only the latest status matters
+    # superseded builds are dropped; only the latest status matters. Dry runs get their own group, so they never
+    # cancel (or get cancelled by) a real update
     concurrency:
-      group: pages-build
+      group: pages-build${{ github.event.inputs.dry_run == 'true' && '-dry-run' || '' }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
@@ -49,21 +64,49 @@ jobs:
             {"group":"ETL Pipelines","repo":"zl-etl","workflow":"build-and-deploy-to-sonatype.yml","label":"Build and deploy"}
           ]'
 
+          # the jobs shown and alerted on: everything but the notify-* bookkeeping jobs.
+          # disabled: a deploy-via-runner job that succeeded without running "Puppet apply", i.e.
+          # /etc/puppet/build-disabled was present on the host
+          job_filter='.jobs[] | select(.name | endswith("notify-ci-dashboard") or endswith("notify-started") | not)
+            | . + {disabled: (.conclusion == "success" and any(.steps[]?; .name == "Puppet apply" and .conclusion == "skipped"))}'
+
+          # one alerting record per job (see alerts/compute.jq)
+          snapshot_of() {  # snapshot_of <repo> <run json> <jobs json>
+            jq -c --arg repo "$1" --argjson run "$2" "[$job_filter
+              | (\$run.head_branch // \"\") as \$branch
+              | {key: \"\(\$repo)|\(\$branch)|\(.name)\", repo: \$repo, branch: \$branch, job_name: .name,
+                 job_id: .id, status, conclusion, disabled, created_at, started_at, html_url}]" <<< "$3"
+          }
+
           out='[]'
+          snapshot='[]'
           while IFS= read -r row; do
             group=$(echo "$row" | jq -r '.group')
             repo=$(echo "$row" | jq -r '.repo')
             workflow=$(echo "$row" | jq -r '.workflow')
             label=$(echo "$row" | jq -r '.label')
 
-            run=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=1" --jq '.workflow_runs[0] // {}')
+            # the last few runs: the latest is what the dashboard shows; the latest completed (not cancelled) one is
+            # also read for alerting when the latest is still going, without a second runs request
+            recent_runs=$(gh api "repos/PIH/${repo}/actions/workflows/${workflow}/runs?per_page=5" --jq '.workflow_runs')
+            run=$(jq -c '.[0] // {}' <<< "$recent_runs")
             run_id=$(echo "$run" | jq -r '.id // empty')
 
-            # disabled: a deploy-via-runner job that succeeded without running
-            # "Puppet apply", i.e. /etc/puppet/build-disabled was present on the host
             if [ -n "$run_id" ]; then
-              jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs" \
-                --jq '[.jobs[] | select(.name | endswith("notify-ci-dashboard") or endswith("notify-started") | not) | {name, status, conclusion, started_at, completed_at, html_url, disabled: (.conclusion == "success" and any(.steps[]?; .name == "Puppet apply" and .conclusion == "skipped"))}]')
+              raw_jobs=$(gh api "repos/PIH/${repo}/actions/runs/${run_id}/jobs")
+              jobs=$(jq -c "[$job_filter | {name, status, conclusion, started_at, completed_at, html_url, disabled}]" <<< "$raw_jobs")
+
+              # a failure in the latest completed run must still alert when a newer run has already started, so
+              # alerting also looks at that run (older run first). Best effort: if this extra fetch fails, the
+              # dashboard still publishes
+              if [ "$(echo "$run" | jq -r '.status')" != "completed" ]; then
+                done_run=$(jq -c 'map(select(.status == "completed" and .conclusion != "cancelled"))[0] // {}' <<< "$recent_runs")
+                done_run_id=$(echo "$done_run" | jq -r '.id // empty')
+                if [ -n "$done_run_id" ] && done_jobs=$(gh api "repos/PIH/${repo}/actions/runs/${done_run_id}/jobs"); then
+                  snapshot=$(jq -c --argjson more "$(snapshot_of "$repo" "$done_run" "$done_jobs")" '. + $more' <<< "$snapshot")
+                fi
+              fi
+              snapshot=$(jq -c --argjson more "$(snapshot_of "$repo" "$run" "$raw_jobs")" '. + $more' <<< "$snapshot")
             else
               jobs='[]'
             fi
@@ -96,11 +139,70 @@ jobs:
               repos: $repos
             }' > status.json
 
+          echo "$snapshot" > snapshot.json
+          echo "Alert snapshot: $(jq length snapshot.json) jobs from $(jq '[.[].repo] | unique | length' snapshot.json) repos"
+
+      # Works out what changed since the last update. Never fails the job: on any error the previous alert state is
+      # kept, so nothing is lost and the next run tries again.
+      - name: Compute alerts
+        run: |
+          set -uo pipefail
+          prev=null
+          if git fetch -q --depth=1 origin gh-pages 2>/dev/null &&
+             candidate=$(git show FETCH_HEAD:alert-state.json 2>/dev/null) &&
+             jq -e 'type == "object"' <<< "$candidate" > /dev/null 2>&1; then
+            prev=$candidate
+          else
+            echo "No previous alert state; recording the current state without alerting"
+          fi
+          echo "$prev" > prev-state.json
+
+          if jq -n --argjson prev "$prev" --slurpfile snap snapshot.json --argjson now "$(date +%s)" \
+               --argjson queued_limit "$ALERT_QUEUED_LIMIT_SECONDS" --argjson running_limit "$ALERT_RUNNING_LIMIT_SECONDS" \
+               -f alerts/compute.jq > result.json; then
+            jq '.state' result.json > new-state.json
+            jq '.events' result.json > events.json
+          else
+            echo "::warning::Computing alerts failed; keeping the previous alert state"
+            cp prev-state.json new-state.json
+            echo '[]' > events.json
+          fi
+          echo "Alert events: $(jq length events.json)"
+
+      # Posts first, then the new state is saved with the site, so a cancelled or failed run repeats a post rather
+      # than losing it. If the post fails, the previous state is kept and the same alert goes out next run.
+      - name: Post alert
+        continue-on-error: true
+        env:
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          set -uo pipefail
+          cp new-state.json chosen-state.json
+          if [ "$(jq length events.json)" -eq 0 ]; then
+            echo "Nothing new to alert on"
+            exit 0
+          fi
+          jq -n --slurpfile ev events.json -f alerts/card.jq > payload.json
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: this would be posted to Teams:"
+            cat payload.json
+          elif [ -z "${TEAMS_WEBHOOK_URL:-}" ]; then
+            echo "TEAMS_WEBHOOK_URL not set; alerts not sent"
+          elif ! bash alerts/post.sh payload.json; then
+            echo "::warning::Teams post failed; keeping the previous alert state so it is retried next run"
+            cp prev-state.json chosen-state.json
+          fi
+
       - name: Assemble Pages site
+        if: env.DRY_RUN != 'true'
         run: |
           mkdir -p _site
           cp index.html _site/index.html
           cp status.json _site/status.json
+          # the alert state for the next run (absent only if this is the first run and posting failed)
+          if [ -f chosen-state.json ] && jq -e 'type == "object"' chosen-state.json > /dev/null 2>&1; then
+            cp chosen-state.json _site/alert-state.json
+          fi
           # serve files as-is, no Jekyll processing
           touch _site/.nojekyll
 
@@ -110,6 +212,7 @@ jobs:
       # reporting success. The branch keeps only one commit, so its history
       # doesn't grow.
       - name: Publish to gh-pages branch
+        if: env.DRY_RUN != 'true'
         working-directory: _site
         run: |
           set -euo pipefail

@@ -1,0 +1,13 @@
+{
+  "state": {
+    "version": 1,
+    "jobs": {
+      "zl-emr|master|build": {
+        "result": "failure",
+        "job_id": 200
+      }
+    },
+    "stuck": {}
+  },
+  "events": []
+}

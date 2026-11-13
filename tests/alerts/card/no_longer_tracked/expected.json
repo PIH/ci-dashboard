@@ -1,0 +1,32 @@
+{
+  "type": "message",
+  "attachments": [
+    {
+      "contentType": "application/vnd.microsoft.card.adaptive",
+      "content": {
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.4",
+        "body": [
+          {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "text": "CI: 1 update",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "ℹ️ **zl-emr** (master): build: no longer stuck (replaced by a newer run) [details](https://github.com/PIH/zl-emr/actions/runs/1/job/15)",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "[Open the CI dashboard](https://pih.github.io/ci-dashboard/)",
+            "wrap": true
+          }
+        ]
+      }
+    }
+  ]
+}

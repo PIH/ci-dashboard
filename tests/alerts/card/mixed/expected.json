@@ -1,0 +1,47 @@
+{
+  "type": "message",
+  "attachments": [
+    {
+      "contentType": "application/vnd.microsoft.card.adaptive",
+      "content": {
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.4",
+        "body": [
+          {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "text": "CI: 3 problems, 1 recovered",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "🔴 **zl-emr** (master): smoke-tests / zl-ci / smoke-test: failing (failure) [details](https://github.com/PIH/zl-emr/actions/runs/1/job/12)",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "⏳ **ces-emr** (master): build: stuck, queued 12 min [details](https://github.com/PIH/ces-emr/actions/runs/1/job/13)",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "🔴 **pihliberia-emr** (master): deploy: failed after being stuck [details](https://github.com/PIH/pihliberia-emr/actions/runs/1/job/14)",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "✅ **pihsl-emr** (master): build: recovered [details](https://github.com/PIH/pihsl-emr/actions/runs/1/job/11)",
+            "wrap": true
+          },
+          {
+            "type": "TextBlock",
+            "text": "[Open the CI dashboard](https://pih.github.io/ci-dashboard/)",
+            "wrap": true
+          }
+        ]
+      }
+    }
+  ]
+}

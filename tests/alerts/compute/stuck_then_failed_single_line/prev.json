@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "jobs": {
+    "zl-emr|master|build": {
+      "result": "success",
+      "job_id": 100
+    }
+  },
+  "stuck": {
+    "500": {
+      "key": "zl-emr|master|build",
+      "repo": "zl-emr",
+      "branch": "master",
+      "job_name": "build",
+      "html_url": "https://github.com/PIH/zl-emr/actions/runs/1/job/500"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "state": {
+    "version": 1,
+    "jobs": {
+      "zl-emr|master|build": {
+        "result": "failure",
+        "job_id": 200
+      },
+      "pihsl-emr|master|build": {
+        "result": "failure",
+        "job_id": 201
+      }
+    },
+    "stuck": {}
+  },
+  "events": [
+    {
+      "type": "failing",
+      "repo": "zl-emr",
+      "branch": "master",
+      "job_name": "build",
+      "html_url": "https://github.com/PIH/zl-emr/actions/runs/1/job/200",
+      "detail": "failure"
+    },
+    {
+      "type": "failing",
+      "repo": "pihsl-emr",
+      "branch": "master",
+      "job_name": "build",
+      "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/1/job/201",
+      "detail": "failure"
+    }
+  ]
+}
