@@ -174,7 +174,7 @@ jobs:
       - name: Post alert
         continue-on-error: true
         env:
-          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.PIHEMR_CHANNEL_TEAMS_WEBHOOK_URL }}
         run: |
           set -uo pipefail
           cp new-state.json chosen-state.json
@@ -187,7 +187,7 @@ jobs:
             echo "Dry run: this would be posted to Teams:"
             cat payload.json
           elif [ -z "${TEAMS_WEBHOOK_URL:-}" ]; then
-            echo "TEAMS_WEBHOOK_URL not set; alerts not sent"
+            echo "PIHEMR_CHANNEL_TEAMS_WEBHOOK_URL secret not set; alerts not sent"
           elif ! bash alerts/post.sh payload.json; then
             echo "::warning::Teams post failed; keeping the previous alert state so it is retried next run"
             cp prev-state.json chosen-state.json
