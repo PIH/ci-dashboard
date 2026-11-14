@@ -1,0 +1,546 @@
+{
+  "generated_at": "2026-11-14T14:56:07Z",
+  "triggered_by": null,
+  "repos": [
+    {
+      "group": "Modules",
+      "repo": "openmrs-module-pihapps",
+      "workflow_label": "Deploy",
+      "run_number": 159,
+      "html_url": "https://github.com/PIH/openmrs-module-pihapps/actions/runs/42991086072",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-11T08:57:08Z",
+          "completed_at": "2026-11-11T08:58:17Z",
+          "html_url": "https://github.com/PIH/openmrs-module-pihapps/actions/runs/42991086072/job/130423856781",
+          "disabled": false
+        },
+        {
+          "name": "trigger-pihcore-build",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-11T08:58:27Z",
+          "completed_at": "2026-11-11T08:58:30Z",
+          "html_url": "https://github.com/PIH/openmrs-module-pihapps/actions/runs/42991086072/job/130424433057",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "Modules",
+      "repo": "openmrs-module-pihcore",
+      "workflow_label": "Deploy",
+      "run_number": 1844,
+      "html_url": "https://github.com/PIH/openmrs-module-pihcore/actions/runs/43605685465",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "failure",
+          "started_at": "2026-11-14T14:35:50Z",
+          "completed_at": "2026-11-14T14:36:24Z",
+          "html_url": "https://github.com/PIH/openmrs-module-pihcore/actions/runs/43605685465/job/132479704806",
+          "disabled": false
+        },
+        {
+          "name": "trigger-pihemr-build",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-14T14:36:36Z",
+          "completed_at": "2026-11-14T14:36:36Z",
+          "html_url": "https://github.com/PIH/openmrs-module-pihcore/actions/runs/43605685465/job/132479921672",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "Modules",
+      "repo": "openmrs-frontend-pihemr",
+      "workflow_label": "Build and deploy",
+      "run_number": 79,
+      "html_url": "https://github.com/PIH/openmrs-frontend-pihemr/actions/runs/43466704555",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T16:50:14Z",
+          "completed_at": "2026-11-13T16:53:09Z",
+          "html_url": "https://github.com/PIH/openmrs-frontend-pihemr/actions/runs/43466704555/job/132027646867",
+          "disabled": false
+        },
+        {
+          "name": "trigger-pihemr-build",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T16:53:18Z",
+          "completed_at": "2026-11-13T16:53:21Z",
+          "html_url": "https://github.com/PIH/openmrs-frontend-pihemr/actions/runs/43466704555/job/132029394922",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "Modules",
+      "repo": "openhim-advapacs-mediator",
+      "workflow_label": "Build and deploy",
+      "run_number": 26,
+      "html_url": "https://github.com/PIH/openhim-advapacs-mediator/actions/runs/43318039125",
+      "jobs": [
+        {
+          "name": "build-and-publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T22:14:23Z",
+          "completed_at": "2026-11-12T22:14:54Z",
+          "html_url": "https://github.com/PIH/openhim-advapacs-mediator/actions/runs/43318039125/job/131531081469",
+          "disabled": false
+        },
+        {
+          "name": "scan / Trivy scan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T22:14:57Z",
+          "completed_at": "2026-11-12T22:15:19Z",
+          "html_url": "https://github.com/PIH/openhim-advapacs-mediator/actions/runs/43318039125/job/131531383456",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-kol-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T22:15:02Z",
+          "completed_at": "2026-11-12T22:15:48Z",
+          "html_url": "https://github.com/PIH/openhim-advapacs-mediator/actions/runs/43318039125/job/131531441122",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "pihemr",
+      "workflow_label": "Build and deploy",
+      "run_number": 291,
+      "html_url": "https://github.com/PIH/pihemr/actions/runs/43517991975",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:17:07Z",
+          "completed_at": "2026-11-13T22:19:34Z",
+          "html_url": "https://github.com/PIH/pihemr/actions/runs/43517991975/job/132204788392",
+          "disabled": false
+        },
+        {
+          "name": "trigger-downstream-builds",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:45Z",
+          "completed_at": "2026-11-13T22:19:51Z",
+          "html_url": "https://github.com/PIH/pihemr/actions/runs/43517991975/job/132206033562",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "ces-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 304,
+      "html_url": "https://github.com/PIH/ces-emr/actions/runs/43518384498",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:56Z",
+          "completed_at": "2026-11-13T22:23:29Z",
+          "html_url": "https://github.com/PIH/ces-emr/actions/runs/43518384498/job/132206118552",
+          "disabled": false
+        },
+        {
+          "name": "smoke-tests / ces-ci / smoke-test",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:23:40Z",
+          "completed_at": "2026-11-13T22:31:27Z",
+          "html_url": "https://github.com/PIH/ces-emr/actions/runs/43518384498/job/132207851939",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-app-cluster / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:26:18Z",
+          "completed_at": "2026-11-13T22:27:09Z",
+          "html_url": "https://github.com/PIH/ces-emr/actions/runs/43518384498/job/132207962803",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "lesotho-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 322,
+      "html_url": "https://github.com/PIH/lesotho-emr/actions/runs/43518382841",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:56Z",
+          "completed_at": "2026-11-13T22:23:01Z",
+          "html_url": "https://github.com/PIH/lesotho-emr/actions/runs/43518382841/job/132206113188",
+          "disabled": false
+        },
+        {
+          "name": "scan / Trivy scan",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:23:15Z",
+          "completed_at": "2026-11-13T22:24:04Z",
+          "html_url": "https://github.com/PIH/lesotho-emr/actions/runs/43518382841/job/132207671311",
+          "disabled": false
+        },
+        {
+          "name": "deploy / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:24:26Z",
+          "completed_at": "2026-11-13T22:25:07Z",
+          "html_url": "https://github.com/PIH/lesotho-emr/actions/runs/43518382841/job/132207717411",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "pihliberia-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 319,
+      "html_url": "https://github.com/PIH/pihliberia-emr/actions/runs/43518381408",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:54Z",
+          "completed_at": "2026-11-13T22:22:27Z",
+          "html_url": "https://github.com/PIH/pihliberia-emr/actions/runs/43518381408/job/132206107340",
+          "disabled": false
+        },
+        {
+          "name": "smoke-tests / jjd-ci / smoke-test",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:22:44Z",
+          "completed_at": "2026-11-13T22:28:48Z",
+          "html_url": "https://github.com/PIH/pihliberia-emr/actions/runs/43518381408/job/132207426739",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-jjd-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:23:43Z",
+          "completed_at": "2026-11-13T22:24:19Z",
+          "html_url": "https://github.com/PIH/pihliberia-emr/actions/runs/43518381408/job/132207498559",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "pihsl-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 358,
+      "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/43518382410",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:55Z",
+          "completed_at": "2026-11-13T22:23:10Z",
+          "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/43518382410/job/132206111335",
+          "disabled": false
+        },
+        {
+          "name": "smoke-tests / kgh-ci / smoke-test",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:23:21Z",
+          "completed_at": "2026-11-13T22:30:22Z",
+          "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/43518382410/job/132207712253",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-wellbody-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:25:08Z",
+          "completed_at": "2026-11-13T22:25:54Z",
+          "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/43518382410/job/132207763131",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-kgh-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:25:55Z",
+          "completed_at": "2026-11-13T22:26:17Z",
+          "html_url": "https://github.com/PIH/pihsl-emr/actions/runs/43518382410/job/132207776364",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "zl-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 374,
+      "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:19:55Z",
+          "completed_at": "2026-11-13T22:22:32Z",
+          "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826/job/132206108958",
+          "disabled": false
+        },
+        {
+          "name": "smoke-tests / zl-ci / smoke-test",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:22:43Z",
+          "completed_at": "2026-11-13T22:46:20Z",
+          "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826/job/132207425030",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-zl-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:22:49Z",
+          "completed_at": "2026-11-13T22:24:18Z",
+          "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826/job/132207475832",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-hiv-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:22:50Z",
+          "completed_at": "2026-11-13T22:23:06Z",
+          "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826/job/132207486423",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-app-cluster / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-13T22:23:07Z",
+          "completed_at": "2026-11-13T22:23:42Z",
+          "html_url": "https://github.com/PIH/zl-emr/actions/runs/43518381826/job/132207491808",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "EMR Distributions",
+      "repo": "pihmalawi-emr",
+      "workflow_label": "Build and deploy",
+      "run_number": 93,
+      "html_url": "https://github.com/PIH/pihmalawi-emr/actions/runs/43304031900",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T20:49:05Z",
+          "completed_at": "2026-11-12T20:54:19Z",
+          "html_url": "https://github.com/PIH/pihmalawi-emr/actions/runs/43304031900/job/131482432388",
+          "disabled": false
+        },
+        {
+          "name": "e2e-tests / e2e",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T20:54:33Z",
+          "completed_at": "2026-11-12T21:10:49Z",
+          "html_url": "https://github.com/PIH/pihmalawi-emr/actions/runs/43304031900/job/131485544333",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-nenoci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-12T20:54:41Z",
+          "completed_at": "2026-11-12T20:57:59Z",
+          "html_url": "https://github.com/PIH/pihmalawi-emr/actions/runs/43304031900/job/131485635568",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "apzu-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 8,
+      "html_url": "https://github.com/PIH/apzu-etl/actions/runs/40694338463",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T13:12:37Z",
+          "completed_at": "2026-10-28T13:13:57Z",
+          "html_url": "https://github.com/PIH/apzu-etl/actions/runs/40694338463/job/122836990118",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "ces-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 10,
+      "html_url": "https://github.com/PIH/ces-etl/actions/runs/40716021034",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T15:26:49Z",
+          "completed_at": "2026-10-28T15:28:31Z",
+          "html_url": "https://github.com/PIH/ces-etl/actions/runs/40716021034/job/122913804259",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-ces-ci / run-petl",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T15:29:25Z",
+          "completed_at": "2026-10-28T15:30:12Z",
+          "html_url": "https://github.com/PIH/ces-etl/actions/runs/40716021034/job/122915012248",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "imb-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 3,
+      "html_url": "https://github.com/PIH/imb-etl/actions/runs/37783990442",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-08T13:23:47Z",
+          "completed_at": "2026-10-08T13:24:22Z",
+          "html_url": "https://github.com/PIH/imb-etl/actions/runs/37783990442/job/113333931629",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "liberia-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 16,
+      "html_url": "https://github.com/PIH/liberia-etl/actions/runs/42677274498",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-09T18:48:18Z",
+          "completed_at": "2026-11-09T18:49:12Z",
+          "html_url": "https://github.com/PIH/liberia-etl/actions/runs/42677274498/job/129361936575",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-jjd-ci / run-petl",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-09T18:49:34Z",
+          "completed_at": "2026-11-09T18:50:25Z",
+          "html_url": "https://github.com/PIH/liberia-etl/actions/runs/42677274498/job/129362648603",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "sl-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 41,
+      "html_url": "https://github.com/PIH/sl-etl/actions/runs/42706566451",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-09T21:52:21Z",
+          "completed_at": "2026-11-09T21:53:44Z",
+          "html_url": "https://github.com/PIH/sl-etl/actions/runs/42706566451/job/129464814529",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-kgh-ci / run-petl",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-09T21:54:00Z",
+          "completed_at": "2026-11-09T21:56:00Z",
+          "html_url": "https://github.com/PIH/sl-etl/actions/runs/42706566451/job/129465701156",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "group": "ETL Pipelines",
+      "repo": "zl-etl",
+      "workflow_label": "Build and deploy",
+      "run_number": 68,
+      "html_url": "https://github.com/PIH/zl-etl/actions/runs/42297277806",
+      "jobs": [
+        {
+          "name": "build-and-publish / Build and Publish",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T21:30:32Z",
+          "completed_at": "2026-11-06T21:31:29Z",
+          "html_url": "https://github.com/PIH/zl-etl/actions/runs/42297277806/job/128165695855",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-hiv-ci / run-petl",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T21:31:46Z",
+          "completed_at": "2026-11-06T21:34:01Z",
+          "html_url": "https://github.com/PIH/zl-etl/actions/runs/42297277806/job/128166299942",
+          "disabled": false
+        },
+        {
+          "name": "deploy-to-zl-ci / deploy",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-06T21:31:46Z",
+          "completed_at": "2026-11-06T21:35:25Z",
+          "html_url": "https://github.com/PIH/zl-etl/actions/runs/42297277806/job/128166304371",
+          "disabled": false
+        }
+      ]
+    }
+  ]
+}
