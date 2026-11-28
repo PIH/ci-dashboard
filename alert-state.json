@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "jobs": {
+    "openmrs-module-pihapps|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 135084942096
+    },
+    "openmrs-module-pihapps|main|trigger-pihcore-build": {
+      "result": "success",
+      "job_id": 135087147102
+    },
+    "openmrs-module-pihcore|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140862162542
+    },
+    "openmrs-module-pihcore|master|trigger-pihemr-build": {
+      "result": "success",
+      "job_id": 140864093498
+    },
+    "openmrs-frontend-pihemr|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140679716569
+    },
+    "openmrs-frontend-pihemr|main|trigger-pihemr-build": {
+      "result": "success",
+      "job_id": 140680777476
+    },
+    "openhim-advapacs-mediator|main|build-and-publish": {
+      "result": "success",
+      "job_id": 135125239361
+    },
+    "openhim-advapacs-mediator|main|scan / Trivy scan": {
+      "result": "success",
+      "job_id": 135125599220
+    },
+    "openhim-advapacs-mediator|main|deploy-to-kol-ci / deploy": {
+      "result": "success",
+      "job_id": 135125760431
+    },
+    "pihemr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140864129136
+    },
+    "pihemr|master|trigger-downstream-builds": {
+      "result": "success",
+      "job_id": 140865886729
+    },
+    "ces-emr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140865916331
+    },
+    "ces-emr|master|smoke-tests / ces-ci / smoke-test": {
+      "result": "success",
+      "job_id": 140867233290
+    },
+    "ces-emr|master|deploy-to-app-cluster / deploy": {
+      "result": "success",
+      "job_id": 140867254887
+    },
+    "lesotho-emr|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140865917552
+    },
+    "lesotho-emr|main|scan / Trivy scan": {
+      "result": "success",
+      "job_id": 140867028092
+    },
+    "lesotho-emr|main|deploy / deploy": {
+      "result": "success",
+      "job_id": 140867050343
+    },
+    "pihliberia-emr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140865917286
+    },
+    "pihliberia-emr|master|smoke-tests / jjd-ci / smoke-test": {
+      "result": "success",
+      "job_id": 140867308503
+    },
+    "pihliberia-emr|master|deploy-to-jjd-ci / deploy": {
+      "result": "success",
+      "job_id": 140867330612
+    },
+    "pihsl-emr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140865915095
+    },
+    "pihsl-emr|master|smoke-tests / kgh-ci / smoke-test": {
+      "result": "success",
+      "job_id": 140867303705
+    },
+    "pihsl-emr|master|deploy-to-wellbody-ci / deploy": {
+      "result": "success",
+      "job_id": 140867327085
+    },
+    "pihsl-emr|master|deploy-to-kgh-ci / deploy": {
+      "result": "success",
+      "job_id": 140867326169
+    },
+    "zl-emr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140865915066
+    },
+    "zl-emr|master|smoke-tests / zl-ci / smoke-test": {
+      "result": "success",
+      "job_id": 140867138333
+    },
+    "zl-emr|master|deploy-to-zl-ci / deploy": {
+      "result": "success",
+      "job_id": 140867169247
+    },
+    "zl-emr|master|deploy-to-app-cluster / deploy": {
+      "result": "success",
+      "job_id": 140867164076
+    },
+    "zl-emr|master|deploy-to-hiv-ci / deploy": {
+      "result": "success",
+      "job_id": 140867163017
+    },
+    "pihmalawi-emr|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140474309107
+    },
+    "pihmalawi-emr|master|e2e-tests / e2e": {
+      "result": "success",
+      "job_id": 140477415830
+    },
+    "pihmalawi-emr|master|deploy-to-nenoci / deploy": {
+      "result": "success",
+      "job_id": 140477473780
+    },
+    "apzu-etl|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 140492945460
+    },
+    "ces-etl|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 122913804259
+    },
+    "ces-etl|master|deploy-to-ces-ci / run-petl": {
+      "result": "success",
+      "job_id": 122915012248
+    },
+    "imb-etl|master|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 113333931629
+    },
+    "liberia-etl|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 129361936575
+    },
+    "liberia-etl|main|deploy-to-jjd-ci / run-petl": {
+      "result": "success",
+      "job_id": 129362648603
+    },
+    "sl-etl|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 137929779333
+    },
+    "sl-etl|main|deploy-to-kgh-ci / run-petl": {
+      "result": "success",
+      "job_id": 137929713648
+    },
+    "zl-etl|main|build-and-publish / Build and Publish": {
+      "result": "success",
+      "job_id": 128165695855
+    },
+    "zl-etl|main|deploy-to-hiv-ci / run-petl": {
+      "result": "success",
+      "job_id": 128166299942
+    },
+    "zl-etl|main|deploy-to-zl-ci / deploy": {
+      "result": "success",
+      "job_id": 128166304371
+    }
+  },
+  "stuck": {}
+}
